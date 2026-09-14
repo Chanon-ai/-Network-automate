@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cisco Router SSH</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0f1117;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      padding: 24px;
+    }
+
+    .card {
+      background: #181b23;
+      border: 1px solid #2d333d;
+      padding: 32px;
+      border-radius: 14px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #ffffff;
+      font-size: 32px;
+    }
+
+    .hint {
+      color: #9ca3af;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 8px;
+      font-weight: bold;
+      color: #d1d5db;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      background: #0f1117;
+      color: #ffffff;
+      border: 1px solid #3b4250;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+    }
+
+    input::placeholder {
+      color: #6b7280;
+    }
+
+    button {
+      margin-top: 24px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    pre {
+      margin-top: 24px;
+      padding: 20px;
+      min-height: 180px;
+      background: #080a0f;
+      color: #d1d5db;
+      border: 1px solid #272b33;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      font-family: "Courier New", monospace;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="card">
+
+    <h1>Cisco Router SSH</h1>
+
+    <p class="hint">
+      Enter the router IP and IOS command, then click Execute.
+    </p>
+
+    <label for="ip">Router IP address</label>
+    <input
+      id="ip"
+      value="192.168.31.133"
+      placeholder="192.168.31.133"
+    >
+
+    <label for="command">Router command line</label>
+    <input
+      id="command"
+      value="show ip interface brief"
+      placeholder="show ip interface brief"
+    >
+
+    <button id="execute">Execute</button>
+
+    <pre id="output">Output will appear here...</pre>
+
+  </div>
+</div>
+
+<script>
+const button = document.getElementById("execute");
+const output = document.getElementById("output");
+
+button.addEventListener("click", async () => {
+
+  const ip = document.getElementById("ip").value.trim();
+  const command = document.getElementById("command").value.trim();
+
+  if (!ip || !command) {
+    output.textContent =
+      "Please enter both IP address and command.";
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Executing...";
+  output.textContent = "Connecting to router...";
+
+  try {
+
+    const response = await fetch("/api/execute", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ip: ip,
+        command: command
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+
+      output.textContent =
+        data.output || "(No output)";
+
+      if (data.error) {
+        output.textContent +=
+          "\n\nSTDERR:\n" + data.error;
+      }
+
+    } else {
+
+      output.textContent =
+        "ERROR: " + data.error;
+
+    }
+
+  } catch (err) {
+
+    output.textContent =
+      "Request failed: " + err.message;
+
+  } finally {
+
+    button.disabled = false;
+    button.textContent = "Execute";
+
+  }
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: router-ssh-backend
+    environment:
+      CISCO_USERNAME: admin
+      CISCO_PASSWORD: cisco
+      SSH_PORT: 22
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
